@@ -119,6 +119,9 @@ internal static class Program
         client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Basic", Convert.ToBase64String(authBytes));
 
+        // current-summoner 接口只有登录之后才存在，客户端刚启动、还在登录界面时查询会返回404，
+        // 这是正常现象，不代表端口/密码错了，所以这里不算失败，只是提示还没登录，
+        // 不影响后面继续监听对局确认（登录之后自然就能查到了）
         try
         {
             var testResp = await client.GetAsync("/lol-summoner/v1/current-summoner");
@@ -131,9 +134,17 @@ internal static class Program
                     : "未知";
                 UpdateTrayTip($"League Auto Accept - {name}");
             }
+            else if (testResp.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                UpdateTrayTip("League Auto Accept - 已连接，等待登录...");
+            }
+            else if (testResp.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+            {
+                UpdateTrayTip("League Auto Accept - 端口/密码验证失败");
+            }
             else
             {
-                UpdateTrayTip($"League Auto Accept - 验证失败 (HTTP {(int)testResp.StatusCode})");
+                UpdateTrayTip($"League Auto Accept - 连接异常 (HTTP {(int)testResp.StatusCode})");
             }
         }
         catch
@@ -186,7 +197,6 @@ internal static class Program
                 if (acceptResp.IsSuccessStatusCode)
                 {
                     wasAccepted = true;
-                    ShowBalloon("League Auto Accept", "已自动接受对局！");
                 }
             }
             else if (state != "InProgress")
@@ -443,16 +453,5 @@ internal static class Program
         if (_hwnd == IntPtr.Zero) return;
         _nid.szTip = text.Length > 127 ? text[..127] : text;
         Shell_NotifyIcon(NIM_MODIFY, ref _nid);
-    }
-
-    private static void ShowBalloon(string title, string text)
-    {
-        if (_hwnd == IntPtr.Zero) return;
-        _nid.uFlags = NIF_MESSAGE | NIF_ICON | NIF_TIP | NIF_INFO;
-        _nid.szInfoTitle = title;
-        _nid.szInfo = text;
-        _nid.dwInfoFlags = 0;
-        Shell_NotifyIcon(NIM_MODIFY, ref _nid);
-        _nid.uFlags = NIF_MESSAGE | NIF_ICON | NIF_TIP; // 复原，避免下次update tip又带出气泡
     }
 }
