@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!-- WinExe: 不弹控制台窗口，程序启动后直接常驻到系统托盘 -->
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <RootNamespace>MiniAutoAccept</RootNamespace>
+    <AssemblyName>MiniAutoAccept</AssemblyName>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <InvariantGlobalization>true</InvariantGlobalization>
+
+    <!-- Native AOT: 编译成原生机器码，不需要单独的 CoreCLR 运行时，
+         体积是几种方案里最小的（约3~6MB），启动也更快 -->
+    <PublishAot>true</PublishAot>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <StackTraceSupport>false</StackTraceSupport>
+    <EventSourceSupport>false</EventSourceSupport>
+    <HttpActivityPropagationSupport>false</HttpActivityPropagationSupport>
+    <UseSystemResourceKeys>true</UseSystemResourceKeys>
+
+    <!-- exe 本身的图标（资源管理器、任务栏显示的那个），需要跟 Program.cs 放同一目录 -->
+    <ApplicationIcon>app.ico</ApplicationIcon>
+
+    <!-- 关闭默认的自动文件扫描：SDK项目默认会递归扫描所在目录及所有子目录下的 *.cs 文件，
+         这会把仓库里 "Leauge Auto Accept" 原项目的源码也一起扫进来（那些代码依赖 RestSharp/NLog，
+         会导致找不到类型的编译错误）。改成只显式编译 Program.cs，不受目录里其它文件影响。 -->
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="Program.cs" />
+  </ItemGroup>
+
+</Project>

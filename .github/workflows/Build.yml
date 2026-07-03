@@ -1,0 +1,31 @@
+name: Build Mini Auto Accept
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch: {}
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 8 SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      # csproj 里已经开启了 PublishAot，这里直接发布即可，
+      # 产出的是原生编译的 exe，体积通常在 3~6MB 左右
+      - name: Publish Native AOT exe
+        run: dotnet publish MiniAutoAccept.csproj -c Release -r win-x64 -o publish
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: MiniAutoAccept-${{ github.sha }}
+          path: publish/MiniAutoAccept.exe
+          if-no-files-found: error
